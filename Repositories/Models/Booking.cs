@@ -12,6 +12,5 @@ namespace Repositories.Models
         public string? RoomSlotId { get; set; }
         public RoomSlot? RoomSlot { get; set; }
         public string? RejectReason { get; set; }
-
     }
 }

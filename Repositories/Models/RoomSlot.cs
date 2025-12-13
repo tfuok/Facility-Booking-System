@@ -9,6 +9,6 @@ namespace Repositories.Models
         public required DateTime StartTime { get; set; }
         public required DateTime EndTime { get; set; }
         public RoomSlotType SlotType { get; set; }
-        public RoomStatus RoomStatus { get; set; }
+        public RoomSlotStatus RoomStatus { get; set; }
     }
 }
