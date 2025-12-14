@@ -364,3 +364,4 @@ FodyWeavers.xsd
 CauPha.API/appsettings.json
 CauPha.API/appsettings.Development.json
 ThuVien.API/appsettings.Development.json
+FacilityBookingSystem\appsettings.json

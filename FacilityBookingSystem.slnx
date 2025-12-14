@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="FacilityBookingSystem/FacilityBookingSystem.csproj" />
+  <Project Path="Repositories/Repositories.csproj" />
+  <Project Path="Services/Services.csproj" />
 </Solution>
