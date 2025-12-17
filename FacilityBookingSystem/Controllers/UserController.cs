@@ -39,17 +39,6 @@ namespace FacilityBookingSystem.Controllers
                 });
             }
 
-            // Không cho Student login
-            if (user.Role == Role.Student)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse
-                {
-                    errorCode = 403,
-                    message = "Tài khoản không được phép đăng nhập hệ thống",
-                    data = null
-                });
-            }
-
             var token = GenerateJSONWebToken(user);
 
             return Ok(new ApiResponse
