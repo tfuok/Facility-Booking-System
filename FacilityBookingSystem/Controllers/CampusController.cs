@@ -19,6 +19,7 @@ namespace FacilityBookingSystem.Controllers
         public sealed record CampusCreateRequest(string name, string address, string description);
         public sealed record CampusUpdateRequest(string name, string address, string description);
 
+        // ======================= CREATE =======================
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CampusCreateRequest input)
@@ -33,6 +34,7 @@ namespace FacilityBookingSystem.Controllers
             try
             {
                 await _campusService.CreateAsync(campus);
+
                 return Ok(new ApiResponse
                 {
                     errorCode = 0,
@@ -40,16 +42,27 @@ namespace FacilityBookingSystem.Controllers
                     data = campus
                 });
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex) 
+            {
+                return BadRequest(new ApiResponse
+                {
+                    errorCode = 400,
+                    message = ex.Message,
+                    data = null
+                });
+            }
+            catch (Exception ex) 
             {
                 return StatusCode(500, new ApiResponse
                 {
                     errorCode = 500,
-                    message = ex.Message
+                    message = "Internal server error",
+                    data = ex.Message
                 });
             }
         }
 
+        // ======================= UPDATE =======================
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(string id, [FromBody] CampusUpdateRequest input)
@@ -62,7 +75,8 @@ namespace FacilityBookingSystem.Controllers
                     return NotFound(new ApiResponse
                     {
                         errorCode = 404,
-                        message = "Campus not found"
+                        message = "Campus not found",
+                        data = null
                     });
                 }
 
@@ -79,12 +93,22 @@ namespace FacilityBookingSystem.Controllers
                     data = existing
                 });
             }
+            catch (InvalidOperationException ex) 
+            {
+                return BadRequest(new ApiResponse
+                {
+                    errorCode = 400,
+                    message = ex.Message,
+                    data = null
+                });
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, new ApiResponse
                 {
                     errorCode = 500,
-                    message = ex.Message
+                    message = "Internal server error",
+                    data = ex.Message
                 });
             }
         }

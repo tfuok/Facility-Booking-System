@@ -35,6 +35,9 @@ namespace Services.CampusService
             if (entity is null)
                 throw new ArgumentNullException(nameof(entity));
 
+            if (await _repo.ExistsByNameAsync(entity.Name))
+                throw new InvalidOperationException("Tên Campus đã tồn tại.");
+
             try
             {
                 var userId = _currentUser.UserId;
@@ -54,6 +57,9 @@ namespace Services.CampusService
         {
             if (entity is null)
                 throw new ArgumentNullException(nameof(entity));
+
+            if (await _repo.ExistsByNameAsync(entity.Name, entity.Id))
+                throw new InvalidOperationException("Tên Campus đã tồn tại.");
 
             try
             {

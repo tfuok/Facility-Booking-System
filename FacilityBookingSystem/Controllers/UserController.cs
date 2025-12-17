@@ -22,42 +22,69 @@ namespace FacilityBookingSystem.Controllers
             _userService = userService;
         }
 
+        // ======================= LOGIN =======================
         [HttpPost("Login")]
-        public IActionResult Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var user = _userService.GetUserAccount(request.UserName, request.Password);
+            var user = await _userService.GetUserAccount(request.UserName, request.Password);
 
-            if (user == null || user.Result == null)
-                return Unauthorized();
-
-            var token = GenerateJSONWebToken(user.Result);
-            LoginResponse loginResponse = new LoginResponse(token, user.Result.Role.ToString());
-            return Ok(loginResponse);
-        }
-
-        private string GenerateJSONWebToken(User systemUserAccount)
-        {
-            if (systemUserAccount.Role.Equals("Student"))
+            // Sai username / password
+            if (user == null)
             {
-                return string.Empty;
+                return StatusCode(StatusCodes.Status401Unauthorized, new ApiResponse
+                {
+                    errorCode = 401,
+                    message = "Sai username hoặc password",
+                    data = null
+                });
             }
 
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            // Không cho Student login
+            if (user.Role == Role.Student)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse
+                {
+                    errorCode = 403,
+                    message = "Tài khoản không được phép đăng nhập hệ thống",
+                    data = null
+                });
+            }
 
-            var claims = new List<Claim>()
-    {
-        new(ClaimTypes.Email, systemUserAccount.Email),
-        new(ClaimTypes.Role, systemUserAccount.Role.ToString()),
-        new(ClaimTypes.NameIdentifier, systemUserAccount.Id.ToString()),
-        new("UserId", systemUserAccount.Id.ToString()),
-        new("sub", systemUserAccount.Id.ToString()),
-    };
+            var token = GenerateJSONWebToken(user);
+
+            return Ok(new ApiResponse
+            {
+                errorCode = 0,
+                message = "Login thành công",
+                data = new LoginResponse(token, user.Role.ToString())
+            });
+        }
+
+        // ======================= JWT =======================
+        private string GenerateJSONWebToken(User user)
+        {
+            var securityKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_config["Jwt:Key"])
+            );
+
+            var credentials = new SigningCredentials(
+                securityKey,
+                SecurityAlgorithms.HmacSha256
+            );
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim("UserId", user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString())
+            };
 
             var token = new JwtSecurityToken(
-                _config["Jwt:Issuer"],
-                _config["Jwt:Audience"],
-                claims,
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                claims: claims,
                 expires: DateTime.Now.AddMinutes(120),
                 signingCredentials: credentials
             );
@@ -65,17 +92,19 @@ namespace FacilityBookingSystem.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-
-        public sealed record LoginRequest(string UserName, string Password);
-
-        public sealed record LoginResponse(string Token, string role);
-
-
+        // ======================= REGISTER =======================
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return BadRequest(new ApiResponse
+                {
+                    errorCode = 400,
+                    message = "Dữ liệu không hợp lệ",
+                    data = ModelState
+                });
+            }
 
             var newUser = new User
             {
@@ -89,14 +118,30 @@ namespace FacilityBookingSystem.Controllers
             var createdUser = await _userService.Register(newUser);
 
             if (createdUser == null)
-                return BadRequest("Email already exists.");
-
-            return Ok(new
             {
-                Message = "User registered successfully",
-                UserId = createdUser.Id
+                return BadRequest(new ApiResponse
+                {
+                    errorCode = 400,
+                    message = "Email đã tồn tại",
+                    data = null
+                });
+            }
+
+            return Ok(new ApiResponse
+            {
+                errorCode = 0,
+                message = "Đăng ký thành công",
+                data = new
+                {
+                    UserId = createdUser.Id
+                }
             });
         }
+
+        // ======================= DTO =======================
+        public sealed record LoginRequest(string UserName, string Password);
+
+        public sealed record LoginResponse(string Token, string Role);
 
         public sealed record RegisterRequest(
             string Email,
@@ -105,7 +150,5 @@ namespace FacilityBookingSystem.Controllers
             string PhoneNumber,
             Role Role
         );
-
     }
 }
-
