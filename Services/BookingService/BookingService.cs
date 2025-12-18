@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using Repositories.ModelExtensions;
 using Repositories.Models;
+using Repositories.Models.Enums;
 using Repositories.Repo;
-using Repositories.Models.Enums; 
 using Services.UserService;
-using System;
 
 namespace Services.BookingService
 {
@@ -76,15 +75,16 @@ namespace Services.BookingService
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = _currentUser.UserId,
                 UserId = _currentUser.UserId,
-                RoomId = roomSlot.RoomId
+                RoomId = roomSlot.RoomId,
+                Status = BookingStatus.Pending
             };
 
-            // cập nhật slot thành Unavailable
-            roomSlot.RoomStatus = Repositories.Models.Enums.RoomSlotStatus.Unavailable;
-            roomSlot.UpdatedAt = DateTime.UtcNow;
-            roomSlot.UpdatedBy = _currentUser.UserId;
+            //// cập nhật slot thành Unavailable
+            //roomSlot.RoomStatus = Repositories.Models.Enums.RoomSlotStatus.Unavailable;
+            //roomSlot.UpdatedAt = DateTime.UtcNow;
+            //roomSlot.UpdatedBy = _currentUser.UserId;
 
-            await _roomSlotRepo.UpdateAsync(roomSlot);
+            //await _roomSlotRepo.UpdateAsync(roomSlot);
 
             return await _repo.CreateAsync(booking);
         }
@@ -126,12 +126,46 @@ namespace Services.BookingService
         }
 
         // ---------------------- UPDATE STATUS (ADMIN) ----------------------
-        public async Task<int> UpdateStatusAsync(string id, BookingStatusUpdateRequest request)
+        public async Task<int> UpdateStatusAsync(
+            string bookingId,
+            BookingStatusUpdateRequest request)
         {
-            var booking = await _repo.GetByIdAsync(id);
+            var booking = await _repo.GetByIdAsync(bookingId);
 
             if (booking == null || booking.DeletedAt != null)
                 throw new KeyNotFoundException("Booking không tồn tại.");
+
+            var roomSlot = booking.RoomSlot
+                ?? throw new InvalidOperationException("RoomSlot không tồn tại.");
+
+            // ====== CONFIRM ======
+            if (booking.Status == BookingStatus.Pending &&
+                request.Status == BookingStatus.Confirmed)
+            {
+                // Chỉ check đúng slot này
+                if (roomSlot.RoomStatus != RoomSlotStatus.Available)
+                    throw new InvalidOperationException("Slot đã bị chiếm.");
+
+                roomSlot.RoomStatus = RoomSlotStatus.Unavailable;
+                roomSlot.UpdatedAt = DateTime.UtcNow;
+                roomSlot.UpdatedBy = _currentUser.UserId;
+
+                await _roomSlotRepo.UpdateAsync(roomSlot);
+            }
+
+            // ====== CANCEL ======
+            if (request.Status == BookingStatus.Cancelled)
+            {
+                // Chỉ trả slot nếu slot này đang bị khóa bởi booking này
+                if (booking.Status == BookingStatus.Confirmed)
+                {
+                    roomSlot.RoomStatus = RoomSlotStatus.Available;
+                    roomSlot.UpdatedAt = DateTime.UtcNow;
+                    roomSlot.UpdatedBy = _currentUser.UserId;
+
+                    await _roomSlotRepo.UpdateAsync(roomSlot);
+                }
+            }
 
             booking.Status = request.Status;
             booking.UpdatedAt = DateTime.UtcNow;
@@ -139,6 +173,7 @@ namespace Services.BookingService
 
             return await _repo.UpdateAsync(booking);
         }
+
 
 
         // ---------------------- SOFT DELETE ----------------------

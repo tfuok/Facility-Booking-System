@@ -42,7 +42,7 @@ namespace FacilityBookingSystem.Controllers
                     data = campus
                 });
             }
-            catch (InvalidOperationException ex) 
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new ApiResponse
                 {
@@ -51,7 +51,7 @@ namespace FacilityBookingSystem.Controllers
                     data = null
                 });
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 return StatusCode(500, new ApiResponse
                 {
@@ -93,7 +93,7 @@ namespace FacilityBookingSystem.Controllers
                     data = existing
                 });
             }
-            catch (InvalidOperationException ex) 
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new ApiResponse
                 {
