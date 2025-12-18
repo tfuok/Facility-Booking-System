@@ -63,30 +63,83 @@ namespace FacilityBookingSystem.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] AreaCreateDto dto)
         {
-            var affected = await _service.CreateAsync(dto);
-
-            return Ok(new ApiResponse
+            try
             {
-                errorCode = 0,
-                message = "Created successfully",
-                data = new { affected }
-            });
+                var affected = await _service.CreateAsync(dto);
+
+                return Ok(new ApiResponse
+                {
+                    errorCode = 0,
+                    message = "Created successfully",
+                    data = new { affected }
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    errorCode = 400,
+                    message = ex.Message,
+                    data = null
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse
+                {
+                    errorCode = 500,
+                    message = "Internal server error",
+                    data = ex.Message
+                });
+            }
         }
+
 
         // -------------------- UPDATE --------------------
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(string id, [FromBody] AreaUpdateDto dto)
         {
-            var affected = await _service.UpdateAsync(id, dto);
-
-            return Ok(new ApiResponse
+            try
             {
-                errorCode = 0,
-                message = "Updated successfully",
-                data = new { affected }
-            });
+                var affected = await _service.UpdateAsync(id, dto);
+
+                return Ok(new ApiResponse
+                {
+                    errorCode = 0,
+                    message = "Updated successfully",
+                    data = new { affected }
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new ApiResponse
+                {
+                    errorCode = 404,
+                    message = ex.Message,
+                    data = null
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    errorCode = 400,
+                    message = ex.Message,
+                    data = null
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse
+                {
+                    errorCode = 500,
+                    message = "Internal server error",
+                    data = ex.Message
+                });
+            }
         }
+
 
         // -------------------- DELETE (SOFT) --------------------
         [HttpDelete("{id}")]

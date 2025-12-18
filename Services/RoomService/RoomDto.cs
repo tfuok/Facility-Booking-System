@@ -11,6 +11,7 @@
         public string RoomNumber { get; set; } = default!;
         public string? RoomName { get; set; }
         public int Floor { get; set; }
+        public int Capacity { get; set; }
     }
 
     public class RoomRequest

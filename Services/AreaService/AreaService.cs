@@ -68,6 +68,10 @@ namespace Services.AreaService
         // -------------------- CREATE --------------------
         public async Task<int> CreateAsync(AreaCreateDto dto)
         {
+            if (await _repo.ExistsByNameInCampusAsync(dto.CampusId, dto.Name))
+                throw new InvalidOperationException(
+                    "Tên Area đã tồn tại trong Campus này.");
+
             var area = new Area
             {
                 Id = Guid.NewGuid().ToString(),
@@ -87,6 +91,10 @@ namespace Services.AreaService
             var area = await _repo.GetByIdAsync(id);
             if (area == null)
                 throw new KeyNotFoundException("Area không tồn tại hoặc đã bị xóa.");
+
+            if (await _repo.ExistsByNameInCampusAsync(dto.CampusId, dto.Name, id))
+                throw new InvalidOperationException(
+                    "Tên Area đã tồn tại trong Campus này.");
 
             area.CampusId = dto.CampusId;
             area.ManagerId = dto.ManagerId;

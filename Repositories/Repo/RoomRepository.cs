@@ -19,6 +19,24 @@ namespace Repositories.Repo
                 .AnyAsync(x => x.Id == id && x.DeletedAt == null);
         }
 
+        public async Task<bool> ExistsInAreaAsync(
+            string areaId,
+            string name,
+            string roomNumber,
+            string? excludeId = null)
+        {
+            return await _context.Rooms
+                .AsNoTracking()
+                .AnyAsync(r =>
+                    r.DeletedAt == null &&
+                    r.AreaId == areaId &&
+                    r.RoomName.ToLower() == name.ToLower() &&
+                    r.RoomNumber == roomNumber &&
+                    (excludeId == null || r.Id != excludeId)
+                );
+        }
+
+
         // -------------------- CREATE --------------------
         public new async Task<int> CreateAsync(Room entity)
         {

@@ -16,7 +16,7 @@ namespace FacilityBookingSystem.Controllers
             _roomTypeService = roomTypeService;
         }
 
-        public sealed record RoomTypeRequest(string name, string description);
+        public sealed record RoomTypeRequest(string name, string? description);
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
@@ -31,6 +31,7 @@ namespace FacilityBookingSystem.Controllers
             try
             {
                 await _roomTypeService.CreateAsync(roomType);
+
                 return Ok(new ApiResponse
                 {
                     errorCode = 0,
@@ -38,12 +39,22 @@ namespace FacilityBookingSystem.Controllers
                     data = roomType
                 });
             }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    errorCode = 400,
+                    message = ex.Message,
+                    data = null
+                });
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, new ApiResponse
                 {
                     errorCode = 500,
-                    message = ex.Message
+                    message = "Internal server error",
+                    data = ex.Message
                 });
             }
         }
@@ -60,7 +71,8 @@ namespace FacilityBookingSystem.Controllers
                     return NotFound(new ApiResponse
                     {
                         errorCode = 404,
-                        message = "RoomType not found"
+                        message = "RoomType not found",
+                        data = null
                     });
                 }
 
@@ -76,15 +88,26 @@ namespace FacilityBookingSystem.Controllers
                     data = existing
                 });
             }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    errorCode = 400,
+                    message = ex.Message,
+                    data = null
+                });
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, new ApiResponse
                 {
                     errorCode = 500,
-                    message = ex.Message
+                    message = "Internal server error",
+                    data = ex.Message
                 });
             }
         }
+
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(string id)

@@ -19,6 +19,20 @@ namespace Repositories.Repo
                 .AnyAsync(x => x.Id == id && x.DeletedAt == null);
         }
 
+        public async Task<bool> ExistsByNameAsync(
+    string name,
+    string? excludeId = null)
+        {
+            return await _context.RoomTypes
+                .AsNoTracking()
+                .AnyAsync(rt =>
+                    rt.DeletedAt == null &&
+                    rt.Name.ToLower() == name.ToLower() &&
+                    (excludeId == null || rt.Id != excludeId)
+                );
+        }
+
+
         // -------------------- CREATE --------------------
         public new async Task<int> CreateAsync(RoomType entity)
         {

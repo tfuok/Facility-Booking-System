@@ -58,14 +58,25 @@ namespace FacilityBookingSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] RoomRequest request)
         {
-            var result = await _service.CreateAsync(request);
-
-            return Ok(new ApiResponse
+            try
             {
-                errorCode = 0,
-                message = "Created successfully",
-                data = result
-            });
+                var id = await _service.CreateAsync(request);
+
+                return Ok(new ApiResponse
+                {
+                    errorCode = 0,
+                    message = "Created successfully",
+                    data = new { id }
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    errorCode = 400,
+                    message = ex.Message
+                });
+            }
         }
 
         // ---------------------- UPDATE ----------------------
@@ -80,7 +91,7 @@ namespace FacilityBookingSystem.Controllers
                 {
                     errorCode = 0,
                     message = "Updated successfully",
-                    data = result
+                    data = new { id = result }
                 });
             }
             catch (KeyNotFoundException ex)
@@ -88,6 +99,14 @@ namespace FacilityBookingSystem.Controllers
                 return NotFound(new ApiResponse
                 {
                     errorCode = 404,
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    errorCode = 400,
                     message = ex.Message
                 });
             }

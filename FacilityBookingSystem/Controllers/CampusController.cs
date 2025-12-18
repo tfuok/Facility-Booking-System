@@ -16,8 +16,8 @@ namespace FacilityBookingSystem.Controllers
             _campusService = campusService;
         }
 
-        public sealed record CampusCreateRequest(string name, string address, string description);
-        public sealed record CampusUpdateRequest(string name, string address, string description);
+        public sealed record CampusCreateRequest(string name, string address, string? description);
+        public sealed record CampusUpdateRequest(string name, string address, string? description);
 
         // ======================= CREATE =======================
         [HttpPost]
