@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Repositories.Models;
 using Repositories.Models.Enums;
@@ -126,6 +127,29 @@ namespace FacilityBookingSystem.Controllers
                 }
             });
         }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetPaging(
+            int page = 1,
+            int size = 10,
+            string? keyword = null,
+            Role? role = null)
+        {
+            var result = await _userService.GetPagingAsync(
+                page,
+                size,
+                keyword,
+                role);
+
+            return Ok(new ApiResponse
+            {
+                errorCode = 0,
+                message = "Success",
+                data = result
+            });
+        }
+
 
         // ======================= DTO =======================
         public sealed record LoginRequest(string UserName, string Password);

@@ -1,4 +1,6 @@
-﻿using Repositories.Models;
+﻿using Repositories.ModelExtensions;
+using Repositories.Models;
+using Repositories.Models.Enums;
 using Repositories.Repo;
 
 namespace Services.UserService
@@ -23,6 +25,32 @@ namespace Services.UserService
                 return null;
 
             return await _repository.Register(user);
+        }
+
+        // ---------------- PAGING ----------------
+        public async Task<PaginationResult<List<UserDto>>> GetPagingAsync(
+            int page,
+            int size,
+            string? keyword,
+            Role? role)
+        {
+            var result = await _repository.GetPagingAsync(page, size, keyword, role);
+
+            return new PaginationResult<List<UserDto>>
+            {
+                TotalItems = result.TotalItems,
+                TotalPages = result.TotalPages,
+                CurrentPage = result.CurrentPage,
+                PageSize = result.PageSize,
+                Items = result.Items.Select(x => new UserDto
+                {
+                    Id = x.Id,
+                    Email = x.Email,
+                    Username = x.Username,
+                    PhoneNumber = x.PhoneNumber,
+                    Role = x.Role
+                }).ToList()
+            };
         }
     }
 }
